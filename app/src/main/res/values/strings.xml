@@ -58,4 +58,8 @@
 
     <!-- Label for dropdown menu option if the pet is female [CHAR LIMIT=20] -->
     <string name="gender_female">Female</string>
+
+    <string name="adding_pet_successful">Pet saved with id: </string>
+    <string name="adding_pet_error">"Error saving pet</string>
+    <string name="missing_input_field">"please fill all fields. If breed unknown, write "unknown".</string>
 </resources>

@@ -21,7 +21,6 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,6 +28,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
@@ -125,25 +125,39 @@ public class EditorActivity extends AppCompatActivity {
     adds contentvalues object to database
      */
     private void insertPet() {
-        String nameString = mNameEditText.toString().trim();
-        String breedString = mBreedEditText.toString().trim();
+        String nameString = mNameEditText.getText().toString().trim();
+        String breedString = mBreedEditText.getText().toString().trim();
         int genderInt = mGender;
-        int weightInt = Integer.parseInt(mWeightEditText.getText().toString());
+        String tempWeightText = mWeightEditText.getText().toString();
+        //check if all input fields are valid
+        boolean inputsValid = (tempWeightText.length() > 0 && nameString.length() > 0 && breedString.length() > 0);
+        if (inputsValid) {
+            int weightInt = Integer.parseInt(tempWeightText);
 
-        PetDbHelper mHelper = new PetDbHelper(this);
-        SQLiteDatabase db = mHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
+            PetDbHelper mHelper = new PetDbHelper(this);
+            SQLiteDatabase db = mHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
 
-        values.put(PetEntry.COLUMN_PET_NAME, nameString);
-        values.put(PetEntry.COLUMN_PET_GENDER, genderInt);
-        values.put(PetEntry.COLUMN_PET_BREED, breedString);
-        values.put(PetEntry.COLUMN_PET_WEIGHT, weightInt);
+            values.put(PetEntry.COLUMN_PET_NAME, nameString);
+            values.put(PetEntry.COLUMN_PET_GENDER, genderInt);
+            values.put(PetEntry.COLUMN_PET_BREED, breedString);
+            values.put(PetEntry.COLUMN_PET_WEIGHT, weightInt);
 
-        long newRowId = db.insert(PetEntry.TABLE_NAME, null, values);
-        if (newRowId == -1) {
-            Log.e(LOG_TAG, "not ok entry");
+            long newRowId = db.insert(PetEntry.TABLE_NAME, null, values);
+            if (newRowId == -1) {
+                Toast toast = Toast.makeText(this, getResources().getText(R.string.adding_pet_error), Toast.LENGTH_SHORT);
+                toast.show();
+            } else {
+                Toast toast = Toast.makeText(this, getResources().getText(R.string.adding_pet_successful) + " " + Long.toString(newRowId), Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        } else {
+            Toast toast = Toast.makeText(this, getResources().getText(R.string.missing_input_field), Toast.LENGTH_SHORT);
+            toast.show();
         }
+
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
