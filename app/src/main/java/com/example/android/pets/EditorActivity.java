@@ -16,7 +16,7 @@
 package com.example.android.pets;
 
 import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -31,7 +31,6 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract.PetEntry;
-import com.example.android.pets.data.PetDbHelper;
 
 /**
  * Allows user to create a new pet or edit an existing one.
@@ -134,8 +133,6 @@ public class EditorActivity extends AppCompatActivity {
         if (inputsValid) {
             int weightInt = Integer.parseInt(tempWeightText);
 
-            PetDbHelper mHelper = new PetDbHelper(this);
-            SQLiteDatabase db = mHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
 
             values.put(PetEntry.COLUMN_PET_NAME, nameString);
@@ -143,14 +140,8 @@ public class EditorActivity extends AppCompatActivity {
             values.put(PetEntry.COLUMN_PET_BREED, breedString);
             values.put(PetEntry.COLUMN_PET_WEIGHT, weightInt);
 
-            long newRowId = db.insert(PetEntry.TABLE_NAME, null, values);
-            if (newRowId == -1) {
-                Toast toast = Toast.makeText(this, getResources().getText(R.string.adding_pet_error), Toast.LENGTH_SHORT);
-                toast.show();
-            } else {
-                Toast toast = Toast.makeText(this, getResources().getText(R.string.adding_pet_successful) + " " + Long.toString(newRowId), Toast.LENGTH_SHORT);
-                toast.show();
-            }
+            Uri returnUri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
+
         } else {
             Toast toast = Toast.makeText(this, getResources().getText(R.string.missing_input_field), Toast.LENGTH_SHORT);
             toast.show();

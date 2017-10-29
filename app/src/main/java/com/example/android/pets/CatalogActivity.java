@@ -19,15 +19,16 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
 
@@ -135,23 +136,14 @@ public class CatalogActivity extends AppCompatActivity {
     }
 
     private void insertPet() {
-        mHelper = new PetDbHelper(this);
-        //create intermittent database
-        SQLiteDatabase db = mHelper.getWritableDatabase();
+        ContentValues contentvalues = new ContentValues();
 
-        //create new entry with key-value pairs
-        ContentValues values = new ContentValues();
+        contentvalues.put(PetContract.PetEntry.COLUMN_PET_NAME, "Grotto");
+        contentvalues.put(PetContract.PetEntry.COLUMN_PET_GENDER, PetContract.PetEntry.GENDER_MALE);
+        contentvalues.put(PetContract.PetEntry.COLUMN_PET_BREED, "DummyDog");
+        contentvalues.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, 14);
 
-        values.put(PetEntry.COLUMN_PET_NAME, "Toto");
-        values.put(PetEntry.COLUMN_PET_GENDER, PetEntry.GENDER_MALE);
-        values.put(PetEntry.COLUMN_PET_BREED, "Terrier");
-        values.put(PetEntry.COLUMN_PET_WEIGHT, 14);
-
-        // Insert the new row, returning the primary key value of the new row
-        long newRowId = db.insert(PetEntry.TABLE_NAME, null, values);
-        if (newRowId == -1) {
-            Log.e(LOG_TAG, "not ok entry");
-        }
+        Uri returnUri = getContentResolver().insert(PetEntry.CONTENT_URI, contentvalues);
 
     }
 
