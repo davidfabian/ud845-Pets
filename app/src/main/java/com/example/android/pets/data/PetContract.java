@@ -29,8 +29,6 @@ public final class PetContract {
      */
     public static final String PATH_PETS = "pets";
 
-    public static final int PETS = 1001;
-    public static final int PET_ID = 1002;
 
     //dummy constructor
     private PetContract() {

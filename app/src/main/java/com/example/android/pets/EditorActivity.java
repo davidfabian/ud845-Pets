@@ -28,7 +28,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract.PetEntry;
 
@@ -128,24 +127,17 @@ public class EditorActivity extends AppCompatActivity {
         String breedString = mBreedEditText.getText().toString().trim();
         int genderInt = mGender;
         String tempWeightText = mWeightEditText.getText().toString();
-        //check if all input fields are valid
-        boolean inputsValid = (tempWeightText.length() > 0 && nameString.length() > 0 && breedString.length() > 0);
-        if (inputsValid) {
-            int weightInt = Integer.parseInt(tempWeightText);
+        //int weightInt = Integer.parseInt(tempWeightText);
 
             ContentValues values = new ContentValues();
 
             values.put(PetEntry.COLUMN_PET_NAME, nameString);
             values.put(PetEntry.COLUMN_PET_GENDER, genderInt);
             values.put(PetEntry.COLUMN_PET_BREED, breedString);
-            values.put(PetEntry.COLUMN_PET_WEIGHT, weightInt);
+        values.put(PetEntry.COLUMN_PET_WEIGHT, tempWeightText);
 
             Uri returnUri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
 
-        } else {
-            Toast toast = Toast.makeText(this, getResources().getText(R.string.missing_input_field), Toast.LENGTH_SHORT);
-            toast.show();
-        }
 
     }
 

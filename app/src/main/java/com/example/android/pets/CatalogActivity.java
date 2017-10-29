@@ -32,6 +32,8 @@ import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
 
+import java.util.Random;
+
 /**
  * Displays list of pets that were entered and stored in the app.
  */
@@ -63,32 +65,17 @@ public class CatalogActivity extends AppCompatActivity {
      * the pets database.
      */
     private void displayDatabaseInfo() {
-        // To access our database, we instantiate our subclass of SQLiteOpenHelper
-        // and pass the context, which is the current activity.
-
-        //mHelper = new PetDbHelper(this);
 
         String[] projection = {PetEntry._ID,
                 PetEntry.COLUMN_PET_NAME,
                 PetEntry.COLUMN_PET_BREED,
                 PetEntry.COLUMN_PET_GENDER,
                 PetEntry.COLUMN_PET_WEIGHT};
-        // Perform this SQL query "SELECT * FROM pets"
         // to get a Cursor that contains all rows from the pets table.
 
-/*
-        Cursor cursor = db.query(
-                PetEntry.TABLE_NAME,                     // The table to query
-                projection,                               // The columns to return
-                null,                                // The columns for the WHERE clause
-                null,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                null                                 // The sort order
-        );
-*/
+
         Cursor cursor = getContentResolver().query(
-                PetEntry.CONTENT_URI,   //// The table to query
+                PetEntry.CONTENT_URI,   // The table to query
                 projection, // The columns to return
                 null,   // The columns for the WHERE clause
                 null,   // The values for the WHERE clause
@@ -136,12 +123,14 @@ public class CatalogActivity extends AppCompatActivity {
     }
 
     private void insertPet() {
+        Random rand = new Random();
+        int randomValue = rand.nextInt(51);
         ContentValues contentvalues = new ContentValues();
 
-        contentvalues.put(PetContract.PetEntry.COLUMN_PET_NAME, "Grotto");
+        contentvalues.put(PetContract.PetEntry.COLUMN_PET_NAME, "Dummydog");
         contentvalues.put(PetContract.PetEntry.COLUMN_PET_GENDER, PetContract.PetEntry.GENDER_MALE);
-        contentvalues.put(PetContract.PetEntry.COLUMN_PET_BREED, "DummyDog");
-        contentvalues.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, 14);
+        contentvalues.put(PetContract.PetEntry.COLUMN_PET_BREED, "Randomweight");
+        contentvalues.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, randomValue);
 
         Uri returnUri = getContentResolver().insert(PetEntry.CONTENT_URI, contentvalues);
 

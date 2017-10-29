@@ -7,18 +7,19 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
-import android.util.Log;
+import android.support.annotation.NonNull;
 import android.widget.Toast;
 
 import com.example.android.pets.R;
 
-import static com.example.android.pets.data.PetContract.PETS;
 
 /**
  * {@link ContentProvider} for Pets app.
  */
 public class PetProvider extends ContentProvider {
 
+    public static final int PETS = 100;
+    public static final int PET_ID = 101;
     /**
      * Tag for the log messages
      */
@@ -28,7 +29,7 @@ public class PetProvider extends ContentProvider {
     static {
         sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PATH_PETS, PETS);
 
-        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PATH_PETS + "/#", PetContract.PET_ID);
+        sUriMatcher.addURI(PetContract.CONTENT_AUTHORITY, PetContract.PATH_PETS + "/#", PET_ID);
     }
 
     private PetDbHelper mDbHelper;
@@ -46,20 +47,40 @@ public class PetProvider extends ContentProvider {
      * Perform the query for the given URI. Use the given projection, selection, selection arguments, and sort order.
      */
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
+    public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs,
                         String sortOrder) {
 
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        Log.e(LOG_TAG, uri.toString());
-        Cursor cursor = db.query(
-                uri.getLastPathSegment(),                     // The table to query
-                projection,                               // The columns to return
-                null,                                // The columns for the WHERE clause
-                null,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                null                                 // The sort order
-        );
+        Cursor cursor;
+        int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PETS:
+                cursor = db.query(
+                        PetContract.PetEntry.TABLE_NAME,                     // The table to query
+                        projection,                               // The columns to return
+                        selection,                                // The columns for the WHERE clause
+                        selectionArgs,                            // The values for the WHERE clause
+                        null,                                     // don't group the rows
+                        null,                                     // don't filter by row groups
+                        null                                 // The sort order
+                );
+                break;
+            case PET_ID:
+                selection = PetContract.PetEntry._ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                cursor = db.query(
+                        uri.getLastPathSegment(),                     // The table to query
+                        projection,                               // The columns to return
+                        selection,                                // The columns for the WHERE clause
+                        selectionArgs,                            // The values for the WHERE clause
+                        null,                                     // don't group the rows
+                        null,                                     // don't filter by row groups
+                        null                                 // The sort order
+                );
+                break;
+            default:
+                throw new IllegalArgumentException("Cannot query unknown URI" + uri);
+        }
         return cursor;
     }
 
@@ -67,7 +88,7 @@ public class PetProvider extends ContentProvider {
      * Insert new data into the provider with the given ContentValues.
      */
     @Override
-    public Uri insert(Uri uri, ContentValues contentValues) {
+    public Uri insert(@NonNull Uri uri, ContentValues contentValues) {
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case PETS:
@@ -81,20 +102,23 @@ public class PetProvider extends ContentProvider {
      * Insert a pet into the database with the given content values. Return the new content URI
      * for that specific row in the database.
      */
-    private Uri insertPet(Uri uri, ContentValues values) {
-        mDbHelper = new PetDbHelper(getContext());
+    private Uri insertPet(Uri uri, ContentValues values) throws IllegalArgumentException {
+
+        // Check that the name is not null
+        String name = values.getAsString(PetContract.PetEntry.COLUMN_PET_NAME);
+        String breed = values.getAsString(PetContract.PetEntry.COLUMN_PET_BREED);
+        String weight = values.getAsString(PetContract.PetEntry.COLUMN_PET_WEIGHT);
+        if (name.length() == 0 || breed.length() == 0 || weight.length() == 0) {
+            Toast toast = Toast.makeText(getContext(), getContext().getString(R.string.adding_pet_error), Toast.LENGTH_SHORT);
+            toast.show();
+            return uri;
+            //throw new IllegalArgumentException("something wasn't filled in.");
+        }
+
         //create intermittent database
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
-
-        //create new entry with key-value pairs
-        ContentValues contentvalues = new ContentValues();
-
-        contentvalues.put(PetContract.PetEntry.COLUMN_PET_NAME, "Grotto");
-        contentvalues.put(PetContract.PetEntry.COLUMN_PET_GENDER, PetContract.PetEntry.GENDER_MALE);
-        contentvalues.put(PetContract.PetEntry.COLUMN_PET_BREED, "PetProvider");
-        contentvalues.put(PetContract.PetEntry.COLUMN_PET_WEIGHT, 14);
-
         // Insert the new row, returning the primary key value of the new row
+
         long newRowId = db.insert(PetContract.PetEntry.TABLE_NAME, null, values);
         if (newRowId == -1) {
             Toast toast = Toast.makeText(getContext(), getContext().getString(R.string.adding_pet_error), Toast.LENGTH_SHORT);
@@ -103,17 +127,17 @@ public class PetProvider extends ContentProvider {
             Toast toast = Toast.makeText(getContext(), getContext().getString(R.string.adding_pet_successful) + " " + Long.toString(newRowId), Toast.LENGTH_SHORT);
             toast.show();
         }
-
         // Once we know the ID of the new row in the table,
         // return the new URI with the ID appended to the end of it
         return ContentUris.withAppendedId(uri, newRowId);
+
     }
 
     /**
      * Updates the data at the given selection and selection arguments, with the new ContentValues.
      */
     @Override
-    public int update(Uri uri, ContentValues contentValues, String selection, String[] selectionArgs) {
+    public int update(@NonNull Uri uri, ContentValues contentValues, String selection, String[] selectionArgs) {
         return 0;
     }
 
@@ -121,7 +145,7 @@ public class PetProvider extends ContentProvider {
      * Delete the data at the given selection and selection arguments.
      */
     @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
+    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
         return 0;
     }
 
@@ -129,7 +153,7 @@ public class PetProvider extends ContentProvider {
      * Returns the MIME type of data for the content URI.
      */
     @Override
-    public String getType(Uri uri) {
+    public String getType(@NonNull Uri uri) {
         return null;
     }
 }
