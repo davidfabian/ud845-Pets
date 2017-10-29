@@ -64,10 +64,8 @@ public class CatalogActivity extends AppCompatActivity {
     private void displayDatabaseInfo() {
         // To access our database, we instantiate our subclass of SQLiteOpenHelper
         // and pass the context, which is the current activity.
-        mHelper = new PetDbHelper(this);
 
-        // Create and/or open a database to read from it
-        SQLiteDatabase db = mHelper.getReadableDatabase();
+        //mHelper = new PetDbHelper(this);
 
         String[] projection = {PetEntry._ID,
                 PetEntry.COLUMN_PET_NAME,
@@ -76,6 +74,8 @@ public class CatalogActivity extends AppCompatActivity {
                 PetEntry.COLUMN_PET_WEIGHT};
         // Perform this SQL query "SELECT * FROM pets"
         // to get a Cursor that contains all rows from the pets table.
+
+/*
         Cursor cursor = db.query(
                 PetEntry.TABLE_NAME,                     // The table to query
                 projection,                               // The columns to return
@@ -84,6 +84,14 @@ public class CatalogActivity extends AppCompatActivity {
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
+        );
+*/
+        Cursor cursor = getContentResolver().query(
+                PetEntry.CONTENT_URI,   //// The table to query
+                projection, // The columns to return
+                null,   // The columns for the WHERE clause
+                null,   // The values for the WHERE clause
+                null    // don't filter by row groups
         );
 
         TextView displayView = (TextView) findViewById(R.id.text_view_pet);
@@ -124,18 +132,6 @@ public class CatalogActivity extends AppCompatActivity {
             // resources and makes it invalid.
             cursor.close();
         }
-    /*
-        try {
-            // Display the number of rows in the Cursor (which reflects the number of rows in the
-            // pets table in the database).
-            TextView displayView = (TextView) findViewById(R.id.text_view_pet);
-            displayView.setText("Number of rows in pets database table: " + cursor.getCount());
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
-            cursor.close();
-        }
-  */
     }
 
     private void insertPet() {
