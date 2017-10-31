@@ -127,16 +127,15 @@ public class EditorActivity extends AppCompatActivity {
         String breedString = mBreedEditText.getText().toString().trim();
         int genderInt = mGender;
         String tempWeightText = mWeightEditText.getText().toString();
-        //int weightInt = Integer.parseInt(tempWeightText);
 
-            ContentValues values = new ContentValues();
+        ContentValues values = new ContentValues();
 
-            values.put(PetEntry.COLUMN_PET_NAME, nameString);
-            values.put(PetEntry.COLUMN_PET_GENDER, genderInt);
-            values.put(PetEntry.COLUMN_PET_BREED, breedString);
+        values.put(PetEntry.COLUMN_PET_NAME, nameString);
+        values.put(PetEntry.COLUMN_PET_GENDER, genderInt);
+        values.put(PetEntry.COLUMN_PET_BREED, breedString);
         values.put(PetEntry.COLUMN_PET_WEIGHT, tempWeightText);
 
-            Uri returnUri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
+        Uri returnUri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
 
 
     }

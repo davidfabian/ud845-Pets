@@ -112,7 +112,6 @@ public class PetProvider extends ContentProvider {
             Toast toast = Toast.makeText(getContext(), getContext().getString(R.string.adding_pet_error), Toast.LENGTH_SHORT);
             toast.show();
             return uri;
-            //throw new IllegalArgumentException("something wasn't filled in.");
         }
 
         //create intermittent database
@@ -137,23 +136,84 @@ public class PetProvider extends ContentProvider {
      * Updates the data at the given selection and selection arguments, with the new ContentValues.
      */
     @Override
-    public int update(@NonNull Uri uri, ContentValues contentValues, String selection, String[] selectionArgs) {
-        return 0;
+    public int update(Uri uri, ContentValues contentValues, String selection,
+                      String[] selectionArgs) {
+
+        // Check that the name is not null
+        String name = contentValues.getAsString(PetContract.PetEntry.COLUMN_PET_NAME);
+        String breed = contentValues.getAsString(PetContract.PetEntry.COLUMN_PET_BREED);
+        String weight = contentValues.getAsString(PetContract.PetEntry.COLUMN_PET_WEIGHT);
+        if (name.length() == 0 || breed.length() == 0 || weight.length() == 0 || contentValues.size() == 0) {
+            Toast toast = Toast.makeText(getContext(), getContext().getString(R.string.adding_pet_error), Toast.LENGTH_SHORT);
+            toast.show();
+            return 0;
+        }
+
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PETS:
+                return updatePet(uri, contentValues, selection, selectionArgs);
+            case PET_ID:
+                // For the PET_ID code, extract out the ID from the URI,
+                // so we know which row to update. Selection will be "_id=?" and selection
+                // arguments will be a String array containing the actual ID.
+                selection = PetContract.PetEntry._ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                return updatePet(uri, contentValues, selection, selectionArgs);
+            default:
+                throw new IllegalArgumentException("Update is not supported for " + uri);
+        }
     }
+
+    /**
+     * Update pets in the database with the given content values. Apply the changes to the rows
+     * specified in the selection and selection arguments (which could be 0 or 1 or more pets).
+     * Return the number of rows that were successfully updated.
+     */
+    private int updatePet(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+
+        //create intermittent database
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        //update and return the number of rows updated
+        return db.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+    }
+
 
     /**
      * Delete the data at the given selection and selection arguments.
      */
     @Override
-    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
-        return 0;
-    }
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        // Get writeable database
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PETS:
+                // Delete all rows that match the selection and selection args
+                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+            case PET_ID:
+                // Delete a single row given by the ID in the URI
+                selection = PetContract.PetEntry._ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                return database.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs);
+            default:
+                throw new IllegalArgumentException("Deletion is not supported for " + uri);
+        }
+    }
     /**
      * Returns the MIME type of data for the content URI.
      */
     @Override
-    public String getType(@NonNull Uri uri) {
-        return null;
+    public String getType(Uri uri) {
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PETS:
+                return PetContract.PetEntry.CONTENT_LIST_TYPE;
+            case PET_ID:
+                return PetContract.PetEntry.CONTENT_ITEM_TYPE;
+            default:
+                throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
+        }
     }
 }
