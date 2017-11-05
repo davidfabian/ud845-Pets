@@ -15,8 +15,11 @@
  */
 package com.example.android.pets;
 
+import android.app.LoaderManager;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -37,9 +40,12 @@ import java.util.Random;
 /**
  * Displays list of pets that were entered and stored in the app.
  */
-public class CatalogActivity extends AppCompatActivity {
+public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    private static int PET_LOADER = 0;
     private String LOG_TAG = getClass().getName();
     private PetDbHelper mHelper;
+    private PetCursorAdapter mCursorAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,45 +61,14 @@ public class CatalogActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        PetDbHelper mHelper = new PetDbHelper(this);
-        displayDatabaseInfo();
 
-
-    }
-
-    //returns a simple cursor from database containing all pet names and corresponding breeds.
-    private Cursor nameAndBreedCursor() {
-        String[] projection = {
-                PetEntry._ID,
-                PetEntry.COLUMN_PET_NAME,
-                PetEntry.COLUMN_PET_BREED
-        };
-        return getContentResolver().query(
-                PetEntry.CONTENT_URI,
-                projection,
-                null,
-                null,
-                null);
-
-    }
-
-    /**
-     * Temporary helper method to display information in the onscreen TextView about the state of
-     * the pets database.
-     */
-    private void displayDatabaseInfo() {
-        //find basic listview to inflate
-        ListView petList = (ListView) findViewById(R.id.list_view_pet);
-
-        //set up empty view
+        ListView petListView = (ListView) findViewById(R.id.list_view_pet);
         View emptyView = findViewById(R.id.empty_view);
-        petList.setEmptyView(emptyView);
+        petListView.setEmptyView(emptyView);
 
-        //get adapter to fill listview with content
-        PetCursorAdapter petAdapter = new PetCursorAdapter(this, nameAndBreedCursor());
-        //attach adapter to listview
-        petList.setAdapter(petAdapter);
-
+        mCursorAdapter = new PetCursorAdapter(this, null);
+        petListView.setAdapter(mCursorAdapter);
+        getLoaderManager().initLoader(PET_LOADER, null, this);
 
 
     }
@@ -133,13 +108,10 @@ public class CatalogActivity extends AppCompatActivity {
             // Respond to a click on the "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
                 insertPet();
-                displayDatabaseInfo();
                 return true;
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
-                // Do nothing for now
                 deleteAll();
-                displayDatabaseInfo();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -147,10 +119,27 @@ public class CatalogActivity extends AppCompatActivity {
 
     }
 
-    //to update the display of main activity after editing an entry
+
     @Override
-    protected void onStart() {
-        super.onStart();
-        displayDatabaseInfo();
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        String[] projection = {
+                PetEntry._ID,
+                PetEntry.COLUMN_PET_NAME,
+                PetEntry.COLUMN_PET_BREED};
+        return new CursorLoader(this, PetEntry.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mCursorAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mCursorAdapter.swapCursor(null);
     }
 }
