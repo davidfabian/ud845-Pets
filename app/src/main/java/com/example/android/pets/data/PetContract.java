@@ -36,6 +36,9 @@ public final class PetContract {
     }
 
 
+    public boolean isValidGender(int gender) {
+        return true;
+    }
     //class for pets table
 
     public static final class PetEntry implements BaseColumns {
@@ -71,5 +74,8 @@ public final class PetContract {
         public static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_PETS;
 
+        public static boolean isValidGender(int gender) {
+            return gender == GENDER_UNKNOWN || gender == GENDER_MALE || gender == GENDER_FEMALE;
+        }
     }
 }

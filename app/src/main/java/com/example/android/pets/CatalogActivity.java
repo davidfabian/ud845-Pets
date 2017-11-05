@@ -16,12 +16,12 @@
 package com.example.android.pets;
 
 import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -29,7 +29,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
@@ -70,6 +72,15 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         petListView.setAdapter(mCursorAdapter);
         getLoaderManager().initLoader(PET_LOADER, null, this);
 
+        petListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
+                Uri currentPetUri = ContentUris.withAppendedId(PetEntry.CONTENT_URI, id);
+                intent.setData(currentPetUri);
+                startActivity(intent);
+            }
+        });
 
     }
 
@@ -88,10 +99,27 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     }
 
     private void deleteAll() {
-        mHelper = new PetDbHelper(this);
+
+        /*mHelper = new PetDbHelper(this);
         SQLiteDatabase db = mHelper.getWritableDatabase();
         db.delete(PetEntry.TABLE_NAME, null, null);
+        */
+
+        int rowsAffected = getContentResolver().delete(PetEntry.CONTENT_URI, null, null);
+// Show a toast message depending on whether or not the delete was successful.
+        if (rowsAffected == 0) {
+            // If no rows were deleted, then there was an error with the delete.
+            Toast.makeText(this, getString(R.string.editor_delete_pet_failed),
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            // Otherwise, the delete was successful and we can display a toast.
+            Toast.makeText(this, getString(R.string.action_delete_all_entries),
+                    Toast.LENGTH_SHORT).show();
+        }
+
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
